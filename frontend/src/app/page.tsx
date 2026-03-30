@@ -879,7 +879,7 @@ export default function LandingPage() {
             <div className="ax-label">COMPARE</div>
             <h2 className="ax-section-title">How RuneMail stacks up</h2>
             <p className="ax-section-sub">
-              See how RuneMail compares to Gmail and other AI email tools like Superhuman, Shortwave, and SaneBox.
+              Head-to-head with Gmail, Superhuman, and Shortwave.
             </p>
           </div>
           <div className="fade-up" style={{ transitionDelay: "0.1s" }}>
@@ -888,40 +888,61 @@ export default function LandingPage() {
                 <thead>
                   <tr>
                     <th className="ax-table-feat-col">Feature</th>
-                    <th>Gmail</th>
-                    <th>Other AI Tools</th>
+                    <th>
+                      <span className="ax-table-th-name">Gmail</span>
+                      <span className="ax-table-th-price">Free</span>
+                    </th>
+                    <th>
+                      <span className="ax-table-th-name">Superhuman</span>
+                      <span className="ax-table-th-price">$30/mo</span>
+                    </th>
+                    <th>
+                      <span className="ax-table-th-name">Shortwave</span>
+                      <span className="ax-table-th-price">$9/mo</span>
+                    </th>
                     <th className="ax-table-hl">
                       <span className="ax-table-brand">
                         <img src="/Logo.png" alt="" width={16} height={16} style={{ borderRadius: 4, objectFit: "contain" }} />
                         RuneMail
                       </span>
+                      <span className="ax-table-th-price" style={{ color: "var(--lime)", opacity: 0.8 }}>Free Forever</span>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    ["AI email categorization", false, true, true],
-                    ["AI chatbot assistant", false, false, true],
-                    ["AI-written reply drafts", false, true, true],
-                    ["Writing style matching", false, null, true],
-                    ["Per-email summaries", false, true, true],
-                    ["Daily briefing dashboard", false, null, true],
-                    ["Todo extraction from emails", false, null, true],
-                    ["Built-in read receipts", false, false, true],
-                    ["Option to run AI locally", false, false, true],
-                    ["Meeting scheduling + Zoom", null, null, true],
-                  ].map(([feature, gmail, others, runemail], i) => (
-                    <tr key={i}>
-                      <td className="ax-table-feat-col">{feature as string}</td>
-                      <td>{gmail === true ? <span className="ax-check">✓</span> : gmail === false ? <span className="ax-cross">✗</span> : <span className="ax-partial">—</span>}</td>
-                      <td>{others === true ? <span className="ax-check">✓</span> : others === false ? <span className="ax-cross">✗</span> : <span className="ax-partial">—</span>}</td>
-                      <td className="ax-table-hl">{runemail === true ? <span className="ax-check ax-check--lime">✓</span> : <span className="ax-partial">—</span>}</td>
-                    </tr>
-                  ))}
+                  {([
+                    ["AI email categorization",   null,  true,  true,  true],
+                    ["AI chatbot assistant",       null,  true,  true,  true],
+                    ["AI-written reply drafts",    null,  true,  true,  true],
+                    ["Writing style matching",     false, true,  true,  true],
+                    ["Per-email summaries",        false, true,  true,  true],
+                    ["Daily briefing dashboard",   false, false, false, true],
+                    ["Todo extraction from emails",false, false, true,  true],
+                    ["Built-in read receipts",     false, true,  true,  true],
+                    ["Local AI (runs in browser)", false, false, false, true],
+                    ["Zoom meeting integration",   false, false, false, true],
+                    ["Multi-account support",      true,  true,  true,  true],
+                    ["Team collaboration",         false, false, true,  false],
+                  ] as [string, boolean|null, boolean|null, boolean|null, boolean|null][]).map(([feature, gmail, superhuman, shortwave, runemail], i) => {
+                    const cell = (val: boolean | null, highlight = false) =>
+                      val === true  ? <span className={highlight ? "ax-check ax-check--lime" : "ax-check"}>✓</span>
+                    : val === false ? <span className="ax-cross">✗</span>
+                    :                 <span className="ax-partial">~</span>;
+                    return (
+                      <tr key={i}>
+                        <td className="ax-table-feat-col">{feature}</td>
+                        <td>{cell(gmail)}</td>
+                        <td>{cell(superhuman)}</td>
+                        <td>{cell(shortwave)}</td>
+                        <td className="ax-table-hl">{cell(runemail, true)}</td>
+                      </tr>
+                    );
+                  })}
                   <tr className="ax-table-price-row">
                     <td className="ax-table-feat-col">Price</td>
                     <td className="ax-price">Free</td>
-                    <td className="ax-price ax-price--paid">$25–30/mo</td>
+                    <td className="ax-price ax-price--paid">$30/mo</td>
+                    <td className="ax-price ax-price--paid">$9/mo</td>
                     <td className="ax-table-hl">
                       <span className="ax-price-badge">Free Forever</span>
                     </td>

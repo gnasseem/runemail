@@ -1047,26 +1047,48 @@ body::after {
   border: 1px solid var(--border);
   box-shadow: 0 0 0 1px rgba(200,255,0,0.05), 0 40px 80px rgba(0,0,0,0.5);
 }
+.ax-compare-wrap { overflow-x: auto; }
 .ax-table {
-  width: 100%; border-collapse: collapse;
+  width: 100%; border-collapse: collapse; min-width: 680px;
 }
 .ax-table th, .ax-table td {
-  padding: 16px 22px; text-align: center;
-  font-size: 14.5px; border-bottom: 1px solid var(--border);
+  padding: 15px 18px; text-align: center;
+  font-size: 14px; border-bottom: 1px solid var(--border);
 }
-.ax-table-feat-col { text-align: left !important; padding-left: 28px !important; }
+.ax-table-feat-col {
+  text-align: left !important;
+  padding-left: 24px !important;
+  width: 32%;
+  min-width: 180px;
+}
 .ax-table th {
   background: rgba(255,255,255,0.025);
   font-family: "Space Mono", monospace;
   font-size: 11px; font-weight: 700;
   color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase;
-  padding-top: 22px; padding-bottom: 22px;
+  padding-top: 20px; padding-bottom: 20px;
+  vertical-align: bottom;
 }
 .ax-table th.ax-table-hl {
   color: var(--lime);
   background: rgba(200,255,0,0.07);
   border-left: 1px solid rgba(200,255,0,0.15);
   border-right: 1px solid rgba(200,255,0,0.15);
+}
+.ax-table-th-name {
+  display: block;
+  font-family: "Space Mono", monospace;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.ax-table-th-price {
+  display: block;
+  font-family: "DM Sans", sans-serif;
+  font-size: 11px; font-weight: 400;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0;
+  text-transform: none;
 }
 .ax-table td { color: var(--text2); background: rgba(255,255,255,0.01); transition: background 0.15s; }
 .ax-table tr:hover td { background: rgba(255,255,255,0.025); }
@@ -1078,34 +1100,35 @@ body::after {
   border-right: 1px solid rgba(200,255,0,0.1);
 }
 .ax-table tr:hover td.ax-table-hl { background: rgba(200,255,0,0.08); }
-.ax-table td.ax-table-feat-col { color: var(--text); font-weight: 500; font-size: 14.5px; }
+.ax-table td.ax-table-feat-col { color: var(--text); font-weight: 500; font-size: 14px; }
 .ax-table-brand {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-weight: 700; color: var(--lime); font-size: 13px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  font-weight: 700; color: var(--lime); font-size: 12px;
+  margin-bottom: 4px;
 }
-.ax-check { color: rgba(255,255,255,0.35); font-weight: 700; font-size: 16px; }
+.ax-check { color: rgba(255,255,255,0.4); font-weight: 700; font-size: 17px; }
 .ax-check--lime {
   color: var(--lime); font-size: 20px;
   text-shadow: 0 0 12px rgba(200,255,0,0.5);
 }
-.ax-cross { color: rgba(255,255,255,0.15); font-size: 16px; }
-.ax-partial { color: rgba(255,255,255,0.18); font-size: 16px; }
+.ax-cross { color: rgba(255,255,255,0.13); font-size: 17px; }
+.ax-partial { color: rgba(255,255,255,0.25); font-size: 15px; }
 .ax-table-price-row td {
   font-family: "Syne", sans-serif; font-weight: 800;
   background: rgba(255,255,255,0.015);
-  padding-top: 22px; padding-bottom: 22px;
+  padding-top: 20px; padding-bottom: 20px;
 }
 .ax-table-price-row td.ax-table-hl { background: rgba(200,255,0,0.06); }
-.ax-price { font-size: 17px; color: rgba(255,255,255,0.35); }
-.ax-price--paid { color: rgba(255,255,255,0.18); }
+.ax-price { font-size: 16px; color: rgba(255,255,255,0.35); }
+.ax-price--paid { color: rgba(255,255,255,0.18); font-size: 15px; }
 .ax-price-badge {
   display: inline-block;
   background: rgba(200,255,0,0.12);
   border: 1.5px solid rgba(200,255,0,0.35);
   color: var(--lime);
-  padding: 7px 22px;
+  padding: 6px 18px;
   border-radius: 10px;
-  font-size: 17px;
+  font-size: 15px;
   font-family: "Syne", sans-serif;
   font-weight: 800;
   letter-spacing: -0.02em;
