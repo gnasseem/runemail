@@ -102,17 +102,19 @@ export default function InboxView() {
   useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
   const fetchEmails = useCallback(async (pageNum = 0) => {
-    // Show cached data instantly on first load (page 0, no search)
+    // Serve cache immediately and skip the DB query on page 0 with no search.
+    // Cache is invalidated by live updates and manual sync, so this is always fresh.
     if (pageNum === 0 && !search) {
       const cached = getViewCache("inbox");
       if (cached) {
         setEmails(cached.emails);
         setHasMore(cached.hasMore);
         setLoading(false);
+        return;
       }
     }
 
-    if (!getViewCache("inbox") || pageNum > 0 || search) setLoading(true);
+    setLoading(true);
 
     const from = pageNum * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
@@ -128,7 +130,7 @@ export default function InboxView() {
       .range(from, to + 1);
 
     if (search) {
-      query = query.or(`subject.ilike.%${search}%,sender.ilike.%${search}%,sender_email.ilike.%${search}%,snippet.ilike.%${search}%,body_text.ilike.%${search}%,recipients.ilike.%${search}%`);
+      query = query.textSearch("search_vector", search, { type: "websearch", config: "english" });
     }
 
     const { data } = await query;

@@ -645,38 +645,44 @@ Deno.serve(async (req) => {
           }
 
           const userId = account.user_id as string;
-          for (const emailData of newEmails) {
-            const { data: existing } = await supabase
-              .from("emails")
-              .select("id")
-              .eq("user_id", userId)
-              .eq("gmail_id", emailData.gmail_id)
-              .maybeSingle();
-            if (existing) continue;
 
-            await supabase.from("emails").insert({
-              user_id: userId,
-              gmail_id: emailData.gmail_id,
-              thread_id: emailData.thread_id,
-              gmail_account_id: account.id,
-              subject: emailData.subject,
-              sender: emailData.sender,
-              sender_email: emailData.sender_email,
-              recipients: emailData.recipients,
-              snippet: emailData.snippet,
-              body_text: emailData.body_text,
-              body_html: emailData.body_html,
-              received_at: emailData.received_at,
-              is_read: emailData.is_read,
-              label_ids: emailData.label_ids,
-              has_attachments: emailData.has_attachments,
-              attachments: emailData.attachments ?? [],
-              has_list_unsubscribe: emailData.has_list_unsubscribe,
-              is_reply: emailData.is_reply,
-              reply_to_email: emailData.reply_to_email,
-              cc_recipients: emailData.cc_recipients,
-              precedence_header: emailData.precedence_header,
-            });
+          // Batch check which gmail_ids already exist (1 query instead of N)
+          const incomingGmailIds = newEmails.map((e) => e.gmail_id);
+          const { data: existingRows } = await supabase
+            .from("emails")
+            .select("gmail_id")
+            .eq("user_id", userId)
+            .in("gmail_id", incomingGmailIds);
+          const existingSet = new Set((existingRows ?? []).map((r: { gmail_id: string }) => r.gmail_id));
+          const toInsert = newEmails.filter((e) => !existingSet.has(e.gmail_id));
+
+          // Batch insert all new emails (1 query instead of N)
+          if (toInsert.length > 0) {
+            await supabase.from("emails").insert(
+              toInsert.map((emailData) => ({
+                user_id: userId,
+                gmail_id: emailData.gmail_id,
+                thread_id: emailData.thread_id,
+                gmail_account_id: account.id,
+                subject: emailData.subject,
+                sender: emailData.sender,
+                sender_email: emailData.sender_email,
+                recipients: emailData.recipients,
+                snippet: emailData.snippet,
+                body_text: emailData.body_text,
+                body_html: emailData.body_html,
+                received_at: emailData.received_at,
+                is_read: emailData.is_read,
+                label_ids: emailData.label_ids,
+                has_attachments: emailData.has_attachments,
+                attachments: emailData.attachments ?? [],
+                has_list_unsubscribe: emailData.has_list_unsubscribe,
+                is_reply: emailData.is_reply,
+                reply_to_email: emailData.reply_to_email,
+                cc_recipients: emailData.cc_recipients,
+                precedence_header: emailData.precedence_header,
+              })),
+            );
           }
 
           if (newHistoryId) {
