@@ -117,8 +117,8 @@ export default function PrivacyPolicy() {
                   AI Processing:
                 </strong>{" "}
                 You can choose to process emails locally in your browser
-                (WebLLM) for maximum privacy, or server-side with Google Gemini
-                API. Local processing keeps your data on your device.
+                (WebLLM) for maximum privacy, or server-side with Cerebras AI.
+                Local processing keeps your data on your device.
               </p>
               <p>
                 <strong className="text-slate-800 dark:text-slate-100">
@@ -140,8 +140,8 @@ export default function PrivacyPolicy() {
             </p>
             <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-2">
               <li>
-                <strong>Google Services:</strong> Gmail API, Google Calendar,
-                Google Generative AI (Gemini). See{" "}
+                <strong>Google Services:</strong> Gmail API, Google Calendar.
+                See{" "}
                 <a
                   href="https://policies.google.com/privacy"
                   className="text-blue-600 dark:text-blue-400 hover:underline"
@@ -153,8 +153,23 @@ export default function PrivacyPolicy() {
                 .
               </li>
               <li>
-                <strong>Supabase:</strong> Database and authentication provider.
+                <strong>Cerebras AI:</strong> Cloud AI processing provider. In
+                cloud or hybrid AI mode, email content is sent to Cerebras AI
+                to perform categorization, summarization, and action extraction.
                 See{" "}
+                <a
+                  href="https://cerebras.ai/privacy"
+                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Cerebras's Privacy Policy
+                </a>
+                .
+              </li>
+              <li>
+                <strong>Supabase:</strong> Database, authentication, and edge
+                function hosting. See{" "}
                 <a
                   href="https://supabase.com/privacy"
                   className="text-blue-600 dark:text-blue-400 hover:underline"
@@ -177,19 +192,6 @@ export default function PrivacyPolicy() {
                 </a>
                 .
               </li>
-              <li>
-                <strong>Supabase:</strong> Edge Functions for background email
-                processing. See{" "}
-                <a
-                  href="https://supabase.com/privacy"
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Supabase's Privacy Policy
-                </a>
-                .
-              </li>
             </ul>
           </section>
 
@@ -198,18 +200,38 @@ export default function PrivacyPolicy() {
               6. Data Sharing
             </h2>
             <p className="text-slate-600 dark:text-slate-300 mb-3">
-              We do not sell or share your email data with third parties, except
-              as required by:
+              We do not sell your email data. Email content may be shared only
+              in the following circumstances:
             </p>
             <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
+              <li>
+                <strong>Cerebras AI (cloud/hybrid mode):</strong> Email content
+                is sent to Cerebras AI solely to perform the AI features you
+                requested (categorization, summarization, action extraction).
+                You can avoid this entirely by switching to local AI mode in
+                Settings.
+              </li>
               <li>Legal obligations or court orders</li>
               <li>Enforcement of our Terms of Service</li>
               <li>Protection of our rights, privacy, or safety</li>
               <li>
-                Service providers under confidentiality agreements (e.g.,
-                Supabase, Vercel)
+                Infrastructure providers under confidentiality agreements
+                (Supabase, Vercel)
               </li>
             </ul>
+            <p className="text-slate-600 dark:text-slate-300 mt-3">
+              RuneMail's use and transfer of information received from Google
+              APIs to any other app will adhere to the{" "}
+              <a
+                href="https://developers.google.com/terms/api-services-user-data-policy"
+                className="text-blue-600 dark:text-blue-400 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Google API Services User Data Policy
+              </a>
+              , including the Limited Use requirements.
+            </p>
           </section>
 
           <section>
@@ -287,15 +309,9 @@ export default function PrivacyPolicy() {
               If you are accessing RuneMail from the European Union, the United
               Kingdom, or other regions with data protection laws, your data is
               processed in accordance with the General Data Protection
-              Regulation (GDPR) and equivalent local laws. See our
-              <a
-                href="/privacy"
-                className="text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                {" "}
-                Data Processing Agreement
-              </a>
-              for additional details.
+              Regulation (GDPR) and equivalent local laws. This Privacy Policy
+              constitutes our data processing disclosure. For questions, contact
+              us at privacy@runemail.org.
             </p>
           </section>
 

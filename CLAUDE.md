@@ -41,7 +41,7 @@ RuneMail/
 │       └── lib/        # emailGraph.ts, webllm.ts, supabase/
 ├── supabase/
 │   ├── functions/api/  # Deno edge function — single entry point for all backend routes
-│   ├── functions/_shared/  # ai.ts (Gemini), gmail.ts, cors.ts, fernet.ts
+│   ├── functions/_shared/  # ai.ts (Cerebras), gmail.ts, cors.ts, fernet.ts
 │   └── schema.sql      # Full DB schema with RLS policies
 └── vercel.json         # Points build at frontend/
 ```
@@ -62,7 +62,7 @@ Three modes controlled by `profile.ai_mode` (`"cloud" | "local" | "hybrid"`):
 
 | Mode | How it works |
 |------|-------------|
-| `cloud` | Calls Supabase edge functions → Gemini API |
+| `cloud` | Calls Supabase edge functions → Cerebras API |
 | `local` | Runs Qwen2.5-3B in browser via WebLLM; **never falls back to cloud** — shows error instead |
 | `hybrid` | Tries local first, falls back to cloud on failure |
 
@@ -106,7 +106,7 @@ Single Deno entry point at `supabase/functions/api/index.ts`. Key routes:
 - `GET /briefing` — cloud AI briefing
 - `GET /track/pixel/:id.gif` — read-receipt pixel (no-auth route)
 
-Shared utilities in `_shared/`: `ai.ts` (Gemini prompts), `gmail.ts`, `fernet.ts` (token encryption).
+Shared utilities in `_shared/`: `ai.ts` (Cerebras prompts), `gmail.ts`, `fernet.ts` (token encryption).
 
 ### Database
 
@@ -134,4 +134,4 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 ```
 
-Edge function secrets (set via `supabase secrets set`): `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `FERNET_KEY`.
+Edge function secrets (set via `supabase secrets set`): `CEREBRAS_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `FERNET_KEY`.

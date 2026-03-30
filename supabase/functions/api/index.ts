@@ -505,9 +505,8 @@ Deno.serve(async (req) => {
       } catch {
         checks.database = "error";
       }
-      checks.gemini_key = getEnv("GEMINI_API_KEY") ? "set" : "missing";
       checks.cerebras_key = getEnv("CEREBRAS_API_KEY") ? "set" : "missing";
-      const allOk = checks.database === "ok" && checks.gemini_key === "set";
+      const allOk = checks.database === "ok" && checks.cerebras_key === "set";
       return json(checks, allOk ? 200 : 503, corsHeaders);
     }
 

@@ -41,7 +41,7 @@ const categoryColors: Record<string, string> = {
 const PAGE_SIZE = 20;
 
 export default function InboxView() {
-  const { user, profile, openCompose, addToast, search, setSyncing, registerSyncFn, registerAnalyzeLocallyFn, inboxFilters, inboxSort, setInboxCustomCategories, setInboxCustomTags, getViewCache, setViewCache, liveChanges, processingCount, startTutorial } = useApp();
+  const { user, profile, openCompose, addToast, search, setSyncing, registerSyncFn, registerAnalyzeLocallyFn, inboxFilters, inboxSort, setInboxCustomCategories, setInboxCustomTags, getViewCache, setViewCache, invalidateViewCache, liveChanges, processingCount, startTutorial } = useApp();
   const supabase = createClient();
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(true);
@@ -449,6 +449,7 @@ export default function InboxView() {
       // Local mode skips this because the webhook may have already inserted
       // unprocessed emails that need to be analyzed in the browser.
       if (newEmailCount === 0 && !isFirstFetch && !useLocalAI) {
+        invalidateViewCache("inbox");
         await fetchEmails(0);
         setInitialPhase(-1);
         return;
@@ -500,17 +501,20 @@ export default function InboxView() {
         const safetyTimer = setTimeout(() => {
           if (!mountedRef.current) return;
           setInitialPhase(-1);
+          invalidateViewCache("inbox");
           fetchEmails(0);
         }, 120_000);
         await Promise.allSettled([analyzeAndBriefing, localStylePromise]);
         clearTimeout(safetyTimer);
         if (!mountedRef.current) return;
         setInitialPhase(3);
+        invalidateViewCache("inbox");
         await fetchEmails(0);
         setInitialPhase(-1);
       } else {
         // Non-initial sync: run in background, no blocking overlay
         await Promise.allSettled([analyzeAndBriefing, localStylePromise]);
+        invalidateViewCache("inbox");
         await fetchEmails(0);
       }
     } catch {
@@ -542,6 +546,7 @@ export default function InboxView() {
     ) {
       prevEmailsChange.current = liveChanges.emails;
       prevProcessedChange.current = liveChanges.email_processed;
+      invalidateViewCache("inbox");
       fetchEmails(0);
     }
   }, [liveChanges.emails, liveChanges.email_processed, fetchEmails]);
