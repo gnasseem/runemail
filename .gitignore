@@ -1,0 +1,63 @@
+# Environment
+venv/
+.venv/
+.env
+*.pyc
+__pycache__/
+.pytest_cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OAuth tokens
+token.json
+credentials.json
+
+# Build / cache artifacts
+.uv_cache/
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Large model files
+models/
+models/**/*.gguf
+
+# SQLite database
+data/*.db
+
+# User data (PII)
+data/profile.json
+data/active_account.json
+data/style_profile.json
+data/style_samples/
+data/settings.json
+
+# Backup files
+*.bak
+*.bak2
+*.old
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Private product notes
+todo.md
+.vercel
+.env*.local
+
+# Tool artifacts
+.playwright-mcp/
+*.png
+
+# Claude Code memory and skills
+.claude/
+frontend/.claude/
+
+# Supabase local temp files
+supabase/.temp/

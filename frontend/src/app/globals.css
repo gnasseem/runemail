@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Light mode — Gmail-inspired clean palette ── */
+:root {
+  --foreground: #202124;
+  --background: #ffffff;
+  --sidebar-bg: #f6f8fc;
+  --border: #e2e8f0;
+  --muted: #5f6368;
+  --accent: #1a7a48;
+  --accent-light: #e6f4ed;
+  --danger: #d93025;
+  --success: #1e8e3e;
+  --warning: #e37400;
+  --surface: #ffffff;
+  --surface-2: #f1f3f4;
+}
+
+/* ── Dark mode — Gmail dark palette ── */
+.dark {
+  --foreground: #e8eaed;
+  --background: #202124;
+  --sidebar-bg: #1a1b1e;
+  --border: #3c4043;
+  --muted: #9aa0a6;
+  --accent: #4ade80;
+  --accent-light: #052e16;
+  --danger: #f28b82;
+  --success: #81c995;
+  --warning: #fdd663;
+  --surface: #292a2d;
+  --surface-2: #35363a;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure form controls inherit text color — fixes dark mode invisible text */
+input,
+textarea,
+select {
+  color: var(--foreground);
+}
+
+/* Native select dropdowns: set color-scheme so the browser renders the popup
+   in the correct theme, and give options an explicit background/color so text
+   is never invisible in dark mode. */
+select {
+  color-scheme: light;
+}
+.dark select {
+  color-scheme: dark;
+  background-color: var(--surface);
+}
+option,
+optgroup {
+  background-color: var(--surface);
+  color: var(--foreground);
+}
+
+/* Dark mode: neon accent bg needs dark text */
+.dark [class~="bg-[var(--accent)]"],
+.dark [class*="bg-[var(--accent)]"] {
+  color: #202124;
+}
+
+/* ── Style datetime-local inputs to match dark theme ── */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+}
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+}
+input[type="datetime-local"] {
+  color-scheme: light;
+}
+.dark input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* ── RuneMail wordmark ── */
+.runemail-wordmark {
+  font-family: "Syne", sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #c4954a 5%, #82b07a 52%, #3a6b48 95%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+.dark .runemail-wordmark {
+  background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
