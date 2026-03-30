@@ -284,7 +284,9 @@ async function fetchMessageById(
       snippet: (msg.snippet as string) ?? "",
       body_text: state.bodyText,
       body_html: state.bodyHtml,
-      received_at: headers["date"] ?? "",
+      received_at: msg.internalDate
+        ? new Date(parseInt(msg.internalDate as string, 10)).toISOString()
+        : (headers["date"] ?? new Date().toISOString()),
       is_read: !((msg.labelIds as string[]) ?? []).includes("UNREAD"),
       label_ids: (msg.labelIds as string[]) ?? [],
       has_attachments: state.hasAttachments,
