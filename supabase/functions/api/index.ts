@@ -1934,9 +1934,12 @@ Deno.serve(async (req) => {
         const { data: existing } = await supabase
           .from("gmail_accounts").select("id").eq("user_id", userId).eq("gmail_address", gmailAddress);
         if (existing?.length) {
+          const existingId = existing[0].id as string;
+          // Clear stale emails so reconnect always starts fresh with current inbox
+          await supabase.from("emails").delete().eq("gmail_account_id", existingId);
           await supabase.from("gmail_accounts")
-            .update({ tokens_encrypted: tokensJson, is_active: true })
-            .eq("user_id", userId).eq("gmail_address", gmailAddress);
+            .update({ tokens_encrypted: tokensJson, is_active: true, history_id: null })
+            .eq("id", existingId);
         } else {
           // First time connecting — remove any stale placeholder rows and insert
           await supabase.from("gmail_accounts").delete().eq("user_id", userId).eq("gmail_address", "");
