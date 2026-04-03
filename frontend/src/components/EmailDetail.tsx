@@ -793,6 +793,17 @@ export default function EmailDetail({
           Reply
         </button>
 
+        {/* Reply All — show when the email had multiple recipients or CC */}
+        {(email.recipients || email.cc_recipients) && (
+          <button
+            onClick={() => openCompose({ ...email, _replyAll: true })}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[var(--border)] text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>reply_all</span>
+            Reply All
+          </button>
+        )}
+
         <div className="flex-1" />
 
         {/* Action buttons */}

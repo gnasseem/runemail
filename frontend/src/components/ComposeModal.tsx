@@ -69,12 +69,42 @@ export default function ComposeModal({
   const { user, profile, addToast, notifyDraftChange, notifySent, notifyReceipt, assistantOpen } = useApp();
   const supabase = createClient();
   const draftId = useRef(draft?.id ?? crypto.randomUUID());
-  const [to, setTo] = useState(
-    draft ? (draft.to_addresses || []).join(", ") : (replyTo?.sender_email || "")
-  );
-  const [cc, setCc] = useState("");
+  // Helper: extract bare email addresses from a comma-separated RFC 2822 string,
+  // excluding the user's own address.
+  const extractReplyAddresses = (raw: string, excludeEmail: string): string[] => {
+    return (raw || "").split(",").map((s) => {
+      const trimmed = s.trim();
+      const angleMatch = trimmed.match(/^.*?<([^>]+)>\s*$/);
+      const addr = angleMatch ? angleMatch[1].trim().toLowerCase() : trimmed.toLowerCase();
+      return addr;
+    }).filter((e) => e.includes("@") && e !== excludeEmail);
+  };
+
+  const userEmail = (profile?.email || user?.email || "").toLowerCase();
+
+  const [to, setTo] = useState(() => {
+    if (draft) return (draft.to_addresses || []).join(", ");
+    if (replyTo?._replyAll) {
+      const addrs = new Set<string>();
+      if (replyTo.sender_email) {
+        const raw = replyTo.sender_email.trim();
+        const angleMatch = raw.match(/^.*?<([^>]+)>\s*$/);
+        const addr = (angleMatch ? angleMatch[1] : raw).toLowerCase();
+        if (addr.includes("@") && addr !== userEmail) addrs.add(addr);
+      }
+      for (const addr of extractReplyAddresses(replyTo.recipients || "", userEmail)) addrs.add(addr);
+      return Array.from(addrs).join(", ");
+    }
+    return replyTo?.sender_email || "";
+  });
+  const [cc, setCc] = useState(() => {
+    if (replyTo?._replyAll && replyTo.cc_recipients) {
+      return extractReplyAddresses(replyTo.cc_recipients, userEmail).join(", ");
+    }
+    return "";
+  });
   const [bcc, setBcc] = useState("");
-  const [showCcBcc, setShowCcBcc] = useState(false);
+  const [showCcBcc, setShowCcBcc] = useState(!!(replyTo?._replyAll && replyTo?.cc_recipients));
   const [subject, setSubject] = useState(
     draft ? (draft.subject || "") : (replyTo ? (/^Re:/i.test(replyTo.subject || "") ? replyTo.subject : `Re: ${replyTo.subject}`) : ""),
   );

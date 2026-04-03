@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 export interface Contact {
   email: string;
   name: string;
+  /** When set, this is a domain group suggestion — selecting it inserts all these addresses */
+  _groupEmails?: string[];
 }
 
 /** Parse a raw RFC 2822 address like `"Name" <email>` or `Name <email>` or bare `email` */
@@ -132,14 +134,34 @@ function useEmailAutocomplete(contacts: Contact[], multi = true) {
         : value.trim();
       if (lastToken.length < 1) { setSuggestions([]); return; }
       const lower = lastToken.toLowerCase();
-      const filtered = contacts
-        .filter(
-          (c) =>
-            c.email.toLowerCase().includes(lower) ||
-            c.name.toLowerCase().includes(lower)
-        )
-        .slice(0, 6);
-      setSuggestions(filtered);
+      const filtered = contacts.filter(
+        (c) =>
+          c.email.toLowerCase().includes(lower) ||
+          c.name.toLowerCase().includes(lower)
+      );
+
+      // Build domain group suggestions: when 2+ contacts share a domain that matches the query,
+      // offer a one-click "Add all @domain (N)" option.
+      const domainGroups = new Map<string, string[]>();
+      for (const c of filtered) {
+        const atIdx = c.email.indexOf("@");
+        if (atIdx < 0) continue;
+        const domain = c.email.slice(atIdx + 1).toLowerCase();
+        if (!domainGroups.has(domain)) domainGroups.set(domain, []);
+        domainGroups.get(domain)!.push(c.email);
+      }
+      const groupSuggestions: Contact[] = [];
+      for (const [domain, emails] of domainGroups) {
+        if (emails.length >= 2) {
+          groupSuggestions.push({
+            email: `__group__@${domain}`,
+            name: `Add all @${domain} (${emails.length})`,
+            _groupEmails: emails,
+          });
+        }
+      }
+
+      setSuggestions([...groupSuggestions, ...filtered.slice(0, 6)]);
       setActiveIdx(0);
     },
     [contacts, multi]
@@ -147,6 +169,18 @@ function useEmailAutocomplete(contacts: Contact[], multi = true) {
 
   const applySuggestion = useCallback(
     (value: string, contact: Contact) => {
+      if (contact._groupEmails) {
+        // Replace the current token with all group emails
+        if (multi) {
+          const parts = value.split(",");
+          parts[parts.length - 1] = " " + contact._groupEmails.join(", ");
+          setSuggestions([]);
+          return parts.join(",").replace(/^ /, "");
+        } else {
+          setSuggestions([]);
+          return contact._groupEmails[0] ?? "";
+        }
+      }
       if (multi) {
         const parts = value.split(",");
         parts[parts.length - 1] = " " + contact.email;
@@ -238,10 +272,18 @@ export function EmailField({
               onMouseDown={() => onChange(applySuggestion(value, c))}
               className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-[var(--surface-2)] ${i === activeIdx ? "bg-[var(--surface-2)]" : ""}`}
             >
-              <span className="material-symbols-outlined text-[var(--muted)]" style={{ fontSize: "14px" }}>person</span>
+              <span className="material-symbols-outlined text-[var(--muted)]" style={{ fontSize: "14px" }}>
+                {c._groupEmails ? "group" : "person"}
+              </span>
               <span className="truncate">
-                {c.name && <span className="font-medium">{c.name} </span>}
-                <span className="text-[var(--muted)]">{c.email}</span>
+                {c._groupEmails ? (
+                  <span className="font-medium text-[var(--accent)]">{c.name}</span>
+                ) : (
+                  <>
+                    {c.name && <span className="font-medium">{c.name} </span>}
+                    <span className="text-[var(--muted)]">{c.email}</span>
+                  </>
+                )}
               </span>
             </button>
           ))}
