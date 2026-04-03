@@ -121,7 +121,7 @@ export default function InboxView() {
 
     let query = supabase
       .from("emails")
-      .select("*, email_processed(*)")
+      .select("*, email_processed!inner(*)")
       .eq("user_id", user.id)
       .eq("is_archived", false)
       .not("label_ids", "cs", '{"SENT"}') // exclude imported sent emails from inbox
@@ -749,7 +749,7 @@ export default function InboxView() {
 
         {/* Processing banner */}
         {(processingCount > 0 || localProcessingCount > 0) && (
-          <div className="px-4 py-2 bg-[var(--accent)]/10 border-b border-[var(--border)] flex items-center gap-2 text-sm text-[var(--accent)]">
+          <div className="px-4 py-2 bg-[var(--accent-light)] border-b border-[var(--border)] flex items-center gap-2 text-sm text-[var(--accent)]">
             <span className="material-symbols-outlined animate-spin" style={{ fontSize: "16px" }}>progress_activity</span>
             Processing {processingCount || localProcessingCount} new email{(processingCount || localProcessingCount) !== 1 ? "s" : ""}...
           </div>

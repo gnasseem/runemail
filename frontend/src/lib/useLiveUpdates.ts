@@ -132,6 +132,7 @@ export function useLiveUpdates(
             analysisDebounceRef.current = null;
             if (syncingRef.current) return;
             syncingRef.current = true;
+            const emailCount = pendingEmailsRef.current;
             try {
               const apiUrl = process.env.NEXT_PUBLIC_SUPABASE_URL + "/functions/v1/api";
               let { data: { session } } = await supabase.auth.getSession();
@@ -157,6 +158,12 @@ export function useLiveUpdates(
               syncingRef.current = false;
               pendingEmailsRef.current = 0;
               setProcessingCount(0);
+              if (emailCount > 0) {
+                callbacksRef.current?.addToast(
+                  "info",
+                  `${emailCount} new email${emailCount !== 1 ? "s" : ""} ready`,
+                );
+              }
             }
           }, 500);
         },
@@ -205,7 +212,6 @@ export function useLiveUpdates(
   // ── Silent background sync ──
   const backgroundSync = useCallback(async () => {
     if (syncingRef.current) return;
-    if (document.visibilityState !== "visible") return;
 
     syncingRef.current = true;
     try {

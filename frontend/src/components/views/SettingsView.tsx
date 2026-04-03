@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useApp } from "../AppShell";
 import WebLLMConsentModal from "../WebLLMConsentModal";
 import { EmailField, useContacts } from "../EmailAutocomplete";
+import { subscribeToPush, isPushSupported } from "@/lib/pushNotifications";
 
 type DelegationRule = {
   id: string;
@@ -222,6 +223,30 @@ export default function SettingsView() {
   const [notificationPreview, setNotificationPreview] = useState<boolean>(
     (profile as any)?.notification_preview !== false,
   );
+  const [pushPermission, setPushPermission] = useState<"default" | "granted" | "denied" | "unsupported">("default");
+  const [enablingPush, setEnablingPush] = useState(false);
+
+  useEffect(() => {
+    if (!isPushSupported()) { setPushPermission("unsupported"); return; }
+    setPushPermission(Notification.permission as "default" | "granted" | "denied");
+  }, []);
+
+  const handleEnablePush = async () => {
+    setEnablingPush(true);
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) { addToast("error", "Session expired, please sign in again."); return; }
+      const ok = await subscribeToPush(process.env.NEXT_PUBLIC_SUPABASE_URL!, session.access_token);
+      const newPermission = Notification.permission as "default" | "granted" | "denied";
+      setPushPermission(newPermission);
+      if (ok) addToast("success", "Push notifications enabled.");
+      else if (newPermission === "denied") addToast("error", "Notifications blocked. Allow them in your browser settings.");
+      else addToast("error", "Could not enable notifications. Try again.");
+    } finally {
+      setEnablingPush(false);
+    }
+  };
 
   // Working hours
   const [workStart, setWorkStart] = useState("09:00");
@@ -793,6 +818,37 @@ export default function SettingsView() {
 
             <SectionLabel>Notifications</SectionLabel>
             <SectionCard>
+              <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  {pushPermission === "granted" ? (
+                    <span className="material-symbols-outlined text-[var(--success)]" style={{ fontSize: "18px" }}>check_circle</span>
+                  ) : pushPermission === "denied" ? (
+                    <span className="material-symbols-outlined text-[var(--danger)]" style={{ fontSize: "18px" }}>block</span>
+                  ) : pushPermission === "unsupported" ? (
+                    <span className="material-symbols-outlined text-[var(--muted)]" style={{ fontSize: "18px" }}>notifications_off</span>
+                  ) : (
+                    <span className="material-symbols-outlined text-[var(--muted)]" style={{ fontSize: "18px" }}>notifications</span>
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-[var(--foreground)]">Browser notifications</p>
+                    <p className="text-xs text-[var(--muted)]">
+                      {pushPermission === "granted" && "Enabled. Notifications will appear even when the tab is closed."}
+                      {pushPermission === "denied" && "Blocked. Open your browser\u2019s site settings to allow notifications."}
+                      {pushPermission === "unsupported" && "Not supported in this browser."}
+                      {pushPermission === "default" && "Allow RuneMail to send you push notifications."}
+                    </p>
+                  </div>
+                </div>
+                {pushPermission === "default" && (
+                  <button
+                    onClick={handleEnablePush}
+                    disabled={enablingPush}
+                    className="shrink-0 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  >
+                    {enablingPush ? "Enabling..." : "Enable"}
+                  </button>
+                )}
+              </div>
               <div className="p-4 border-b border-[var(--border)]">
                 <p className="text-xs font-medium text-[var(--muted)] mb-3">When should RuneMail notify you?</p>
                 <div className="space-y-2">

@@ -10,7 +10,6 @@ import TutorialShell from "./tutorial/TutorialShell";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { useLiveUpdates, type LiveChangeCounters } from "@/lib/useLiveUpdates";
-import { subscribeToPush } from "@/lib/pushNotifications";
 
 type Profile = {
   id: string;
@@ -200,17 +199,12 @@ export default function AppShell({
     return () => clearTimeout(timer);
   }, [user.id]);
 
-  // Register service worker and subscribe to Web Push (silent, non-blocking)
+  // Service worker registration — push subscription is handled explicitly in Settings
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.access_token) return;
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      subscribeToPush(supabaseUrl, session.access_token).catch(() => {
-        // Push not supported or permission denied — silently ignore
-      });
+    import("@/lib/pushNotifications").then(({ registerServiceWorker }) => {
+      registerServiceWorker();
     });
-  }, [user.id]);
+  }, []);
 
   const openCompose = (replyTo?: any, draft?: any) => {
     setComposeReplyTo(replyTo || null);
