@@ -142,6 +142,13 @@ export default function BriefingView() {
       return new Set(raw ? JSON.parse(raw) : []);
     } catch { return new Set(); }
   });
+  // Tracks dismissed deadline keys as "source|date" to hide related deadline rows
+  const [dismissedDeadlineKeys, setDismissedDeadlineKeys] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(`runemail_dismissed_deadlines_${user.id}`);
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch { return new Set(); }
+  });
   // briefing is read-only from cache; generation happens in the sync pipeline
 
   const loadCachedBriefing = useCallback(async () => {
@@ -254,12 +261,20 @@ export default function BriefingView() {
     }
   }, [briefingVersion, invalidateViewCache, loadCachedBriefing]);
 
-  const dismissCard = useCallback((id: string) => {
+  const dismissCard = useCallback((id: string, email?: BriefingEmail) => {
     setDismissedIds((prev) => {
       const next = new Set(prev).add(id);
       localStorage.setItem(`runemail_dismissed_briefing_${user.id}`, JSON.stringify([...next]));
       return next;
     });
+    if (email?.deadline && email?.senderName) {
+      const key = `${email.senderName}|${email.deadline}`;
+      setDismissedDeadlineKeys((prev) => {
+        const next = new Set(prev).add(key);
+        localStorage.setItem(`runemail_dismissed_deadlines_${user.id}`, JSON.stringify([...next]));
+        return next;
+      });
+    }
   }, [user.id]);
 
   const openEmailById = useCallback(async (emailId: string) => {
@@ -274,11 +289,20 @@ export default function BriefingView() {
   const formatTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   const visibleTopPriority = (briefing?.topPriority ?? []).filter((e) => !e.email_id || !dismissedIds.has(e.email_id));
-  const visibleWaiting = (briefing?.waitingForReply ?? []).filter((e) => !e.email_id || !dismissedIds.has(e.email_id));
+  const topPriorityEmailIds = new Set(visibleTopPriority.map((e) => e.email_id).filter(Boolean));
+  const visibleWaiting = (briefing?.waitingForReply ?? []).filter((e) =>
+    (!e.email_id || !dismissedIds.has(e.email_id)) &&
+    (!e.email_id || !topPriorityEmailIds.has(e.email_id))
+  );
+  const visibleDeadlines = (briefing?.deadlines ?? []).filter((d) => {
+    const key = `${d.source}|${d.date}`;
+    return !dismissedDeadlineKeys.has(key);
+  });
   const displayStats = briefing?.stats ? {
     ...briefing.stats,
     critical: visibleTopPriority.filter((e) => e.urgency === "critical").length,
     waitingOnYou: visibleWaiting.length,
+    deadlines: visibleDeadlines.length,
   } : undefined;
   const stats = displayStats;
   const hasContent = briefing && (
@@ -430,7 +454,7 @@ export default function BriefingView() {
                         key={email.email_id ?? i}
                         email={email}
                         onClick={email.email_id ? () => openEmailById(email.email_id!) : undefined}
-                        onDismiss={email.email_id ? () => dismissCard(email.email_id!) : undefined}
+                        onDismiss={email.email_id ? () => dismissCard(email.email_id!, email) : undefined}
                       />
                     ))}
                   </div>
@@ -450,7 +474,7 @@ export default function BriefingView() {
                         key={email.email_id ?? i}
                         email={email}
                         onClick={email.email_id ? () => openEmailById(email.email_id!) : undefined}
-                        onDismiss={email.email_id ? () => dismissCard(email.email_id!) : undefined}
+                        onDismiss={email.email_id ? () => dismissCard(email.email_id!, email) : undefined}
                       />
                     ))}
                   </div>
@@ -458,7 +482,7 @@ export default function BriefingView() {
               )}
 
               {/* Deadlines */}
-              {(briefing.deadlines?.length ?? 0) > 0 && (
+              {visibleDeadlines.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <span className="material-symbols-outlined text-purple-400" style={{ fontSize: "16px" }}>event_upcoming</span>
@@ -466,7 +490,7 @@ export default function BriefingView() {
                   </div>
                   <div className="rounded-xl border border-[var(--border)] divide-y divide-[var(--border)]">
                     <div className="px-4 py-1">
-                      <DeadlineTimeline deadlines={briefing.deadlines} />
+                      <DeadlineTimeline deadlines={visibleDeadlines} />
                     </div>
                   </div>
                 </div>
