@@ -1,0 +1,10 @@
+models/
+.venv/
+venv/
+.pytest_cache/
+.uv_cache/
+**/*.gguf
+*.pyc
+__pycache__/
+.env
+.env.local

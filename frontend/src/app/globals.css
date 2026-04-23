@@ -1,0 +1,235 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Light mode — Gmail-inspired clean palette ── */
+:root {
+  --foreground: #202124;
+  --background: #ffffff;
+  --sidebar-bg: #f6f8fc;
+  --border: #e2e8f0;
+  --muted: #5f6368;
+  --accent: #1a7a48;
+  --accent-light: #e6f4ed;
+  --danger: #d93025;
+  --success: #1e8e3e;
+  --warning: #e37400;
+  --surface: #ffffff;
+  --surface-2: #f1f3f4;
+}
+
+/* ── Dark mode — Gmail dark palette ── */
+.dark {
+  --foreground: #e8eaed;
+  --background: #202124;
+  --sidebar-bg: #1a1b1e;
+  --border: #3c4043;
+  --muted: #9aa0a6;
+  --accent: #4ade80;
+  --accent-light: #052e16;
+  --danger: #f28b82;
+  --success: #81c995;
+  --warning: #fdd663;
+  --surface: #292a2d;
+  --surface-2: #35363a;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family:
+    "DM Sans",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure form controls inherit text color — fixes dark mode invisible text */
+input,
+textarea,
+select {
+  color: var(--foreground);
+}
+
+/* Native select dropdowns: set color-scheme so the browser renders the popup
+   in the correct theme, and give options an explicit background/color so text
+   is never invisible in dark mode. */
+select {
+  color-scheme: light;
+}
+.dark select {
+  color-scheme: dark;
+  background-color: var(--surface);
+}
+option,
+optgroup {
+  background-color: var(--surface);
+  color: var(--foreground);
+}
+
+/* Dark mode: neon accent bg needs dark text */
+.dark [class~="bg-[var(--accent)]"],
+.dark [class*="bg-[var(--accent)]"] {
+  color: #202124;
+}
+
+/* ── Style datetime-local inputs to match dark theme ── */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+}
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+}
+input[type="datetime-local"] {
+  color-scheme: light;
+}
+.dark input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Email reader: native scrollbars match theme (Firefox + color-scheme) */
+.email-reader-pane {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.dark .email-reader-pane {
+  color-scheme: dark;
+  scrollbar-color: #5f6368 #1a1b1e;
+}
+.dark .email-reader-pane::-webkit-scrollbar-thumb {
+  background: #5f6368;
+}
+.dark .email-reader-pane::-webkit-scrollbar-thumb:hover {
+  background: #80868b;
+}
+
+/* ── RuneMail wordmark ── */
+.runemail-wordmark {
+  font-family: "Syne", sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #c4954a 5%, #82b07a 52%, #3a6b48 95%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+.dark .runemail-wordmark {
+  background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── docx-preview styles ── */
+.docx-preview section.docx {
+  padding: 48px 64px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  margin: 16px auto;
+  background: #fff;
+  max-width: 900px;
+}
+.docx-preview {
+  background: #f5f5f5;
+  padding: 16px;
+}
+
+/* ── xlsx table styles ── */
+.attachment-sheet-preview table {
+  border-collapse: collapse;
+  font-size: 11px;
+  width: 100%;
+}
+.attachment-sheet-preview td,
+.attachment-sheet-preview th {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+.attachment-sheet-preview tr:first-child td {
+  font-weight: 600;
+  background: var(--surface-2);
+}
+
+/* ── Auto-Resolve agent animations (subtle, no rotations or gradients) ── */
+@keyframes solveDotBounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+@keyframes solvePulseRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(5, 150, 105, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
+  }
+}
+@keyframes solveFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.solve-dot-wave span {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
+  margin: 0 2px;
+  animation: solveDotBounce 1.2s infinite ease-in-out;
+}
+.solve-dot-wave span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.solve-dot-wave span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.solve-fade-in {
+  animation: solveFadeIn 180ms ease-out;
+}
+
+/* Backdrop surface for the Auto-Resolve panel — flat, calm, no gradients. */
+.solve-panel-bg {
+  background: var(--background);
+}
+.dark .solve-panel-bg {
+  background: var(--background);
+}

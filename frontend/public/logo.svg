@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="lg" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#DAFF20"/>
+      <stop offset="100%" stop-color="#9ECC00"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" result="b"/>
+      <feFlood flood-color="#C8FF00" flood-opacity="0.55" result="c"/>
+      <feComposite in="c" in2="b" operator="in" result="cb"/>
+      <feMerge>
+        <feMergeNode in="cb"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100" height="100" rx="22" fill="#06060E"/>
+  <!-- Subtle radial highlight -->
+  <radialGradient id="bg-hl" cx="50%" cy="30%" r="60%">
+    <stop offset="0%" stop-color="rgba(200,255,0,0.06)"/>
+    <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+  </radialGradient>
+  <rect width="100" height="100" rx="22" fill="url(#bg-hl)"/>
+
+  <!-- Outer M shape (top half) -->
+  <path d="M 14,14 L 14,54 L 50,30 L 86,54 L 86,14"
+        fill="none" stroke="url(#lg)" stroke-width="6.5"
+        stroke-linejoin="miter" stroke-linecap="square" filter="url(#glow)"/>
+
+  <!-- Outer W shape (bottom half, mirrored M) -->
+  <path d="M 14,86 L 14,46 L 50,70 L 86,46 L 86,86"
+        fill="none" stroke="url(#lg)" stroke-width="6.5"
+        stroke-linejoin="miter" stroke-linecap="square" filter="url(#glow)"/>
+
+  <!-- Inner bracing M (depth detail) -->
+  <path d="M 26,26 L 26,46 L 50,38 L 74,46 L 74,26"
+        fill="none" stroke="url(#lg)" stroke-width="4"
+        stroke-linejoin="miter" stroke-linecap="square" opacity="0.5" filter="url(#glow)"/>
+
+  <!-- Border glow ring -->
+  <rect x="1.5" y="1.5" width="97" height="97" rx="20.5"
+        fill="none" stroke="rgba(200,255,0,0.35)" stroke-width="1.5"/>
+</svg>
