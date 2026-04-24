@@ -1010,11 +1010,18 @@ export default function InboxView() {
 
           if (!e.is_read) s += 20;
 
-          const cat = p?.category;
-          if (cat === "action-required") s += 30;
-          else if (cat === "important") s += 20;
-          else if (cat === "informational") s += 5;
-          else if (cat === "newsletter") s += 1;
+          // Urgency field (from process_email) takes precedence over category proxy.
+          const urgency = p?.urgency;
+          if (urgency === "critical") s += 40;
+          else if (urgency === "high") s += 25;
+          else {
+            // Fall back to category-based scoring when urgency is medium/low/absent.
+            const cat = p?.category;
+            if (cat === "action-required") s += 30;
+            else if (cat === "important") s += 20;
+            else if (cat === "informational") s += 5;
+            else if (cat === "newsletter") s += 1;
+          }
 
           if (e.is_starred) s += 10;
 

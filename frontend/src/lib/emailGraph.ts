@@ -394,7 +394,17 @@ const categorizeNode: NodeFn = async (state) => {
     `Classify this email. Return JSON only:
 ${outputShape}
 
-Pick the FIRST category that fits:
+STEP 1 — HIGH-STAKES CHECK (run before standard rules):
+If this email concerns any of these life-event domains, it is NEVER "informational" or "newsletter":
+- Career: job offer, offer letter, interview invitation, application update (hired/shortlisted/rejected/next steps), onboarding, background check, recruiter asking for a response, contract to sign
+- Academic: admission/acceptance/rejection, financial aid, scholarship, enrollment deadline
+- Legal: contract, agreement, legal notice, settlement, lease, terms requiring signature
+- Medical: appointment, lab results, prescription, diagnosis, referral
+- Financial decision: mortgage, loan, credit decision, account suspended, fraud alert requiring action
+ATS/HR senders (Greenhouse, Workday, Lever, Taleo, SmartRecruiters, iCIMS, Jobvite) writing about a job or interview are NOT informational.
+If STEP 1 triggers: use action-required when a reply/action is expected; use important when status-only FYI.
+
+STEP 2 — STANDARD RULES (first that fits):
 1. action-required: a real person is waiting on YOU to do something concrete — reply, approve, sign, pay, schedule, RSVP, review, submit. A direct human question always belongs here.
 2. important: a real person wrote to you and it is worth reading, no response required right now (status update, personal note, FYI from a known contact). Do NOT use as a safe default.
 3. newsletter: bulk content sent to a mailing list — digests, promotional campaigns, brand newsletters, weekly round-ups, sales. Marketing tone + broadcast.
@@ -402,7 +412,7 @@ Pick the FIRST category that fits:
 
 Tie-breakers: unsubscribe link alone does NOT make something a newsletter (transactional mail has them). When unsure between important and informational, prefer informational for automated content; use important only for real human-to-human mail. Use the SIGNALS above to guide your classification.${tagsSection}`,
     `${signalContext}${emailText}`,
-    { temperature: 0.1, maxTokens: 128 },
+    { temperature: 0.1, maxTokens: 256 },
   );
 
   const parsed = extractJSON<{ category?: string; tags?: string[] }>(raw, {});
@@ -414,13 +424,19 @@ Tie-breakers: unsubscribe link alone does NOT make something a newsletter (trans
     ? parsed.tags.filter((t: string) => validTagSlugs.has(t))
     : [];
 
-  // Security/deadline keyword signals can upgrade miscategorized emails
+  // Keyword-based safety net for high-stakes and urgent signals
   const fullText = `${email.subject} ${email.snippet || ""}`.toLowerCase();
-  const securityKeywords = ["security alert", "verify your account", "password reset", "suspicious activity", "unauthorized access", "token expired"];
-  const deadlineKeywords = ["by end of day", "by eod", "deadline", "today", "tonight"];
-  const hasUrgentSignal = [...securityKeywords, ...deadlineKeywords].some((k) => fullText.includes(k));
+  const highStakesKeywords = [
+    "job offer", "offer letter", "interview", "application status", "hired", "shortlisted",
+    "rejected", "onboarding", "recruiter", "admission", "accepted", "financial aid",
+    "scholarship", "enrollment", "legal notice", "contract", "settlement", "lab results",
+    "test results", "diagnosis", "mortgage", "loan approval", "account suspended",
+    "security alert", "verify your account", "password reset", "suspicious activity",
+    "unauthorized access", "by end of day", "by eod", "deadline",
+  ];
+  const hasHighStakesSignal = highStakesKeywords.some((k) => fullText.includes(k));
 
-  if (hasUrgentSignal && ["informational", "newsletter"].includes(category)) {
+  if (hasHighStakesSignal && ["informational", "newsletter"].includes(category)) {
     category = "important";
   }
 

@@ -242,6 +242,7 @@ export async function analyzeEmailsForUser(
         user_id: userId,
         email_id: email.id as string,
         category: finalCategory,
+        urgency: result.urgency,
         summary: result.summary,
         quick_actions: [...(result.quick_actions as object[]), ...delegationActions],
         extra_labels: extraLabels.length > 0 ? extraLabels : null,

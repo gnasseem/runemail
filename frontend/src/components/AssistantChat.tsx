@@ -659,7 +659,7 @@ export default function AssistantChat({ className, visible }: { className?: stri
       // The controller is also stored on a ref so the Stop button can abort.
       const chatController = new AbortController();
       abortControllerRef.current = chatController;
-      const chatTimeoutId = setTimeout(() => chatController.abort(), 100_000);
+      const chatTimeoutId = setTimeout(() => chatController.abort(), 180_000);
 
       let res: Response;
       try {
@@ -679,7 +679,7 @@ export default function AssistantChat({ className, visible }: { className?: stri
             stoppedRef.current = false;
             return;
           }
-          throw new Error("Request timed out. For complex multi-step tasks, try breaking them into smaller steps.");
+          throw new Error("Request timed out. The AI service is taking longer than usual; please try again.");
         }
         throw fetchErr;
       }

@@ -147,7 +147,11 @@ export default function ComposeModal({
         : "",
   );
   const [body, setBody] = useState<string>(
-    draft ? draft.body_html || "" : replyTo?._prefillBody || "",
+    draft
+      ? draft.body_html || ""
+      : replyTo?._autoGenerate
+        ? ""
+        : replyTo?._prefillBody || "",
   );
   const [sending, setSending] = useState(false);
   const [scheduleAt, setScheduleAt] = useState(draft?.send_at || "");
@@ -184,7 +188,9 @@ export default function ComposeModal({
   }
 
   // AI draft state
-  const [generatingDraft, setGeneratingDraft] = useState(false);
+  const [generatingDraft, setGeneratingDraft] = useState(
+    !!replyTo?._autoGenerate,
+  );
   const [aiGenerated, setAiGenerated] = useState(false);
   const [showRefinePanel, setShowRefinePanel] = useState(false);
   const [refineFeedback, setRefineFeedback] = useState("");
@@ -386,8 +392,9 @@ export default function ComposeModal({
     setTemplates((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const generateDraft = async () => {
-    if (!body.trim()) {
+  const generateDraft = async (intentOverride?: string) => {
+    const intent = intentOverride ?? body;
+    if (!intent.trim()) {
       addToast("error", "Write your message intent first");
       return;
     }
@@ -413,7 +420,7 @@ export default function ComposeModal({
           const result = await emailGraph.invoke({
             task: "draft",
             userId: user.id,
-            draftIntent: body,
+            draftIntent: intent,
             draftContext: {
               to,
               subject,
@@ -466,7 +473,7 @@ export default function ComposeModal({
           Authorization: `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({
-          intent: body,
+          intent: intent,
           subject,
           to,
           senderName: profile?.display_name || "",
@@ -540,18 +547,13 @@ export default function ComposeModal({
     setRefining(false);
   };
 
-  // Auto-generate when opened via quick reply (body pre-filled, flag set)
+  // Auto-generate when opened via quick reply — body stays empty so the user
+  // never sees the raw prompt; intent is passed directly to generateDraft.
   const hasAutoTriggered = useRef(false);
   useEffect(() => {
-    if (
-      replyTo?._autoGenerate &&
-      !hasAutoTriggered.current &&
-      body &&
-      to &&
-      subject
-    ) {
+    if (replyTo?._autoGenerate && !hasAutoTriggered.current) {
       hasAutoTriggered.current = true;
-      generateDraft();
+      generateDraft(replyTo._prefillBody || "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1333,7 +1335,7 @@ export default function ComposeModal({
             <div className="flex items-center gap-1.5 px-3 py-2 border-t border-[var(--border)] shrink-0">
               {/* Generate button */}
               <button
-                onClick={generateDraft}
+                onClick={() => generateDraft()}
                 disabled={generatingDraft || !to || !subject}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
               >

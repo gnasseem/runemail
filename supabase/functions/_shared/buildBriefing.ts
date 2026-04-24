@@ -83,6 +83,7 @@ function firstProcessed(e: {
   email_processed?: unknown;
 }): {
   category?: string;
+  urgency?: string | null;
   summary?: string | null;
   quick_actions?: unknown;
 } | null {
@@ -90,6 +91,7 @@ function firstProcessed(e: {
   if (!p) return null;
   return (Array.isArray(p) ? p[0] : p) as {
     category?: string;
+    urgency?: string | null;
     summary?: string | null;
     quick_actions?: unknown;
   };
@@ -139,6 +141,9 @@ function baseCard(
 /**
  * Deterministic first pass plus flag for LLM refinement.
  */
+const HIGH_STAKES_SIGNALS =
+  /\b(job offer|offer letter|interview|application (status|update|result)|hired|shortlisted|rejected|next steps|onboarding|background check|recruiter|offer extended|admission|accepted|financial aid|scholarship|enrollment|legal notice|contract|agreement|court|settlement|lease|appointment|lab results|test results|prescription|diagnosis|referral|mortgage|loan approval|loan denial|credit (application|decision)|account suspended|fraud alert)\b/i;
+
 function triageRow(
   row: {
     id: string;
@@ -151,14 +156,23 @@ function triageRow(
 ): { bucket: Bucket; card: Record<string, unknown>; refine: boolean } {
   const p = firstProcessed(row);
   const cat = (p?.category ?? "unknown").toLowerCase();
+  const storedUrgency = (p?.urgency ?? "").toLowerCase();
+  const isHighUrgency = storedUrgency === "critical" || storedUrgency === "high";
   const auto = isAutoSender(row.sender ?? "");
-  const card = baseCard(row, p);
+  const card = {
+    ...baseCard(row, p),
+    // Honour stored urgency as a floor when it is critical or high.
+    ...(isHighUrgency ? { urgency: storedUrgency } : {}),
+  };
   const replyQA = hasReplyQuickAction(p?.quick_actions);
   const blob = `${row.subject ?? ""} ${
     p?.summary ?? ""
   } ${row.snippet ?? ""}`.toLowerCase();
   const addr = extractAddressFromSender(row.sender ?? "");
   const knownSender = !!(addr && knownSenders.has(addr));
+  const isHighStakes = HIGH_STAKES_SIGNALS.test(row.subject ?? "") ||
+    HIGH_STAKES_SIGNALS.test(p?.summary ?? "") ||
+    HIGH_STAKES_SIGNALS.test(row.snippet ?? "");
 
   if (cat === "newsletter") {
     return {
@@ -175,7 +189,8 @@ function triageRow(
     };
   }
 
-  if (cat === "informational" && auto) {
+  // High-stakes emails must never land in nonEssential even if sender looks auto.
+  if (cat === "informational" && auto && !isHighStakes && !isHighUrgency) {
     return {
       bucket: "nonEssential",
       card: {
@@ -453,7 +468,7 @@ export async function buildBriefingForUser(
   let emailsQuery = supabase
     .from("emails")
     .select(
-      "id, subject, sender, snippet, received_at, is_read, label_ids, email_processed(category, summary, quick_actions)",
+      "id, subject, sender, snippet, received_at, is_read, label_ids, email_processed(category, urgency, summary, quick_actions)",
     )
     .eq("user_id", userId)
     .not("label_ids", "cs", '{"SENT"}')
@@ -599,6 +614,7 @@ export async function buildBriefingForUser(
           subject: row.subject ?? "",
           sender: row.sender ?? "",
           category: p?.category ?? "unknown",
+          urgency: p?.urgency ?? null,
           summary: (p?.summary || row.snippet || "").slice(0, 520),
         });
       })
@@ -625,12 +641,14 @@ export async function buildBriefingForUser(
             (prev?.senderName as string) || "",
           sender: (patch.sender as string) || (prev?.sender as string) || "",
           summary: (patch.summary as string) || (prev?.summary as string) || "",
-          urgency:
-            patch.urgency === "critical" || patch.urgency === "high"
-              ? patch.urgency
-              : (prev?.urgency as string) === "high"
-              ? "high"
-              : "medium",
+          urgency: (() => {
+            const stored = (prev?.urgency as string) ?? "";
+            const llm = (patch.urgency as string) ?? "";
+            // Stored critical/high from process_email acts as a floor.
+            if (stored === "critical" || llm === "critical") return "critical";
+            if (stored === "high" || llm === "high") return "high";
+            return "medium";
+          })(),
           deadline: patch.deadline ?? prev?.deadline ?? null,
           waitingForReply: patch.waitingForReply !== undefined
             ? Boolean(patch.waitingForReply)

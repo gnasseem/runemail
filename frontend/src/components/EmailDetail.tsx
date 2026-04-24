@@ -379,7 +379,7 @@ function EmailBody({ html, isDark }: { html: string; isDark: boolean }) {
         fontSize: "14px",
         lineHeight: "1.65",
         wordBreak: "break-word",
-        overflowX: "hidden",
+        overflowX: "auto",
         maxWidth: "100%",
         color: isDark ? "#e2e8f0" : undefined,
       }}
@@ -438,6 +438,33 @@ export default function EmailDetail({
       .eq("thread_id", email.thread_id)
       .then(({ count }) => setIsTracked((count ?? 0) > 0));
   }, [email.thread_id, user.id]);
+
+  // Preload attachments into the module-level cache so preview opens instantly.
+  // Fires after mount; errors are silently swallowed — this is best-effort only.
+  useEffect(() => {
+    const atts = Array.isArray(email.attachments) ? email.attachments : [];
+    if (atts.length === 0) return;
+    const run = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+      for (const att of atts as {
+        filename: string;
+        mime_type: string;
+        size: number;
+        attachment_id: string;
+      }[]) {
+        const cacheKey = `${email.gmail_id}::${att.attachment_id}`;
+        if (attachmentBlobCache.has(cacheKey)) continue;
+        // Skip large files (>10 MB) to avoid wasting bandwidth on preload.
+        if (att.size > 10 * 1024 * 1024) continue;
+        fetchAttachmentBlob(att).catch(() => {});
+      }
+    };
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email.id]);
 
   const trackFollowUp = async () => {
     if (trackingSaving) return;
@@ -539,6 +566,14 @@ export default function EmailDetail({
         setThreadLoading(false);
         if (data && data.length > 1) {
           setThreadEmails(data as ThreadEmail[]);
+          // Preload thread attachments in the background.
+          for (const msg of data as ThreadEmail[]) {
+            const msgAtts = Array.isArray(msg.attachments) ? msg.attachments : [];
+            for (const att of msgAtts) {
+              if (att.size > 10 * 1024 * 1024) continue;
+              fetchAttachmentBlob(att, msg.gmail_id).catch(() => {});
+            }
+          }
         }
       });
   }, [email.thread_id, email.id, user.id]);

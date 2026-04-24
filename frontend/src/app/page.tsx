@@ -141,6 +141,15 @@ export default function LandingPage() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const [showModeModal, setShowModeModal] = useState(false);
 
+  const GOOGLE_SCOPES = [
+    "https://www.googleapis.com/auth/gmail.modify",
+    "https://www.googleapis.com/auth/gmail.compose",
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/contacts.readonly",
+    "https://www.googleapis.com/auth/directory.readonly",
+  ].join(" ");
+
   const triggerOAuth = async (mode: AIMode, theme: "dark" | "light") => {
     setShowModeModal(false);
     const supabase = createClient();
@@ -148,8 +157,7 @@ export default function LandingPage() {
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?ai_mode=${mode}&theme=${theme}&is_signup=1`,
-        scopes:
-          "https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events",
+        scopes: GOOGLE_SCOPES,
         queryParams: { access_type: "offline", prompt: "consent" },
       },
     });
@@ -161,8 +169,7 @@ export default function LandingPage() {
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
-        scopes:
-          "https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events",
+        scopes: GOOGLE_SCOPES,
         queryParams: { access_type: "offline", prompt: "consent" },
       },
     });

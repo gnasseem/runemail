@@ -270,7 +270,9 @@ function extractBody(part: EmailPart, state: ExtractState) {
       attachmentId: part.body?.attachmentId,
     });
   } else if (part.filename) {
-    // Regular attachment
+    // Regular attachment — treat message/rfc822 (attached .eml) as an opaque
+    // blob so we don't recurse into its nested parts and accidentally pull in
+    // the nested email's own attachments as if they belong to the parent.
     state.hasAttachments = true;
     if (part.body?.attachmentId) {
       state.attachments.push({
@@ -280,6 +282,8 @@ function extractBody(part: EmailPart, state: ExtractState) {
         attachment_id: part.body.attachmentId,
       });
     }
+    // Do not recurse into attached messages.
+    if (mime.startsWith("message/")) return;
   }
 
   for (const sub of part.parts ?? []) {
@@ -838,9 +842,9 @@ export async function fetchGoogleContacts(
 export async function searchGoogleContacts(
   encryptedTokens: string,
   query: string,
-): Promise<{ name: string; email: string }[]> {
+): Promise<{ name: string; email: string; source?: "directory" | "contact" }[]> {
   const { tokenData } = await resolveTokens(encryptedTokens);
-  const results: { name: string; email: string }[] = [];
+  const results: { name: string; email: string; source?: "directory" | "contact" }[] = [];
   const seen = new Set<string>();
 
   // Try Workspace directory search first (works for Workspace accounts like @nyu.edu)
@@ -856,7 +860,7 @@ export async function searchGoogleContacts(
         const email = p.emailAddresses?.[0]?.value?.toLowerCase();
         if (name && email && !seen.has(email)) {
           seen.add(email);
-          results.push({ name, email });
+          results.push({ name, email, source: "directory" });
         }
       }
     }
@@ -878,7 +882,7 @@ export async function searchGoogleContacts(
         const email = p.emailAddresses?.[0]?.value?.toLowerCase();
         if (name && email && !seen.has(email)) {
           seen.add(email);
-          results.push({ name, email });
+          results.push({ name, email, source: "contact" });
         }
       }
     }

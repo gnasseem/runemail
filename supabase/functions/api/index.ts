@@ -2583,6 +2583,7 @@ Deno.serve(async (req) => {
           user_id: userId,
           email_id: emailId,
           category: result.category,
+          urgency: result.urgency,
           summary: result.summary,
           quick_actions: result.quick_actions,
         },

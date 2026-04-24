@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 export interface Contact {
   email: string;
   name: string;
+  source?: "directory" | "contact";
 }
 
 /** Parse a raw RFC 2822 address like `"Name" <email>` or `Name <email>` or bare `email` */
@@ -160,7 +161,7 @@ function useEmailAutocomplete(contacts: Contact[], accountId: string, multi = tr
             setSuggestions((prev) => {
               const seen = new Set(prev.map((c) => c.email));
               const merged = [...prev];
-              for (const c of live) {
+              for (const c of live as Contact[]) {
                 if (!seen.has(c.email)) {
                   seen.add(c.email);
                   merged.push(c);
@@ -177,14 +178,17 @@ function useEmailAutocomplete(contacts: Contact[], accountId: string, multi = tr
 
   const applySuggestion = useCallback(
     (value: string, contact: Contact) => {
+      const formatted = contact.name
+        ? `${contact.name} <${contact.email}>`
+        : contact.email;
       if (multi) {
         const parts = value.split(",");
-        parts[parts.length - 1] = " " + contact.email;
+        parts[parts.length - 1] = " " + formatted;
         setSuggestions([]);
         return parts.join(",").replace(/^ /, "");
       } else {
         setSuggestions([]);
-        return contact.email;
+        return formatted;
       }
     },
     [multi]
@@ -271,12 +275,17 @@ export function EmailField({
               className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-[var(--surface-2)] ${i === activeIdx ? "bg-[var(--surface-2)]" : ""}`}
             >
               <span className="material-symbols-outlined text-[var(--muted)]" style={{ fontSize: "14px" }}>
-                person
+                {c.source === "directory" ? "domain" : "person"}
               </span>
-              <span className="truncate">
+              <span className="truncate flex-1">
                 {c.name && <span className="font-medium">{c.name} </span>}
                 <span className="text-[var(--muted)]">{c.email}</span>
               </span>
+              {c.source === "directory" && (
+                <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium">
+                  org
+                </span>
+              )}
             </button>
           ))}
         </div>
